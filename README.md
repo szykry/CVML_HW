@@ -1,3 +1,5 @@
+![alt text](assets/banner.png)
+
 # CVML_HW
 
 ## Welcome to Cactusville!
