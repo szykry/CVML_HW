@@ -3,7 +3,8 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
-from torchvision import transforms
+from PIL import Image
+from torchvision import transforms, get_image_backend
 from IPython.display import HTML
 
 
@@ -44,6 +45,25 @@ def progress(value, max=100):
             {value}
         </progress>
     """.format(value=value, max=max))
+
+
+def traffic_loader(path):
+    def my_pil_loader(path):
+        try:
+            with open(path, 'rb') as f:
+                img = Image.open(f)
+                return img.convert('RGB')
+        except:
+            print('fail to load {} using PIL'.format(img))
+
+    if get_image_backend() == 'accimage':
+        try:
+            return accimage_loader(path)
+        except IOError:
+            print('fail to load {} using accimage, instead using PIL'.format(path))
+            return my_pil_loader(path)
+    else:
+        return my_pil_loader(path)
 
 
 def plotResults(num_epoch, train_accs, train_losses, val_accs, val_losses):

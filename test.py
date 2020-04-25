@@ -1,17 +1,13 @@
 import torch
 import matplotlib.pyplot as plt
 
-from CVML_HW.train import targets, haveCuda, train_loader
-from CVML_HW.utils import get_args
-
-args = get_args()
-batch_size = args.batch_size
-model_dir = args.model_dir
+from torchvision import datasets, get_image_backend
+from PIL import Image
 
 
-def testModel():
-    inputs, labels = next(iter(train_loader))
-    if haveCuda:
+def testModel(targets, dataset, batch_size, model_dir):
+    inputs, labels = next(iter(dataset))
+    if torch.cuda.is_available():
         inputs, labels = inputs.cuda(), labels.cuda()
 
     net = torch.load(model_dir)

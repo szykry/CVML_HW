@@ -4,11 +4,11 @@ import sys
 
 from torch import optim
 from torchvision import datasets, get_image_backend
-from PIL import Image
 from IPython.display import display
-from CVML_HW.utils import get_args, progress, plotResults, transformData
-from CVML_HW.test import testModel
-from CVML_HW.model import ConvNet
+
+from utils import get_args, progress, traffic_loader, plotResults, transformData
+from test import testModel
+from model import ConvNet
 
 haveCuda = torch.cuda.is_available()
 
@@ -31,25 +31,6 @@ targets = ['Bump', 'Bumpy road', 'Bus stop', 'Children', 'Crossing (blue)', 'Cro
            'Traffic light', 'Train crossing', 'Train crossing (no barrier)', 'Wild animals',
            'Priority', 'Turn left', 'Turn right'
            ]
-
-
-def traffic_loader(path):
-    def my_pil_loader(path):
-        try:
-            with open(path, 'rb') as f:
-                img = Image.open(f)
-                return img.convert('RGB')
-        except:
-            print('fail to load {} using PIL'.format(img))
-
-    if get_image_backend() == 'accimage':
-        try:
-            return accimage_loader(path)
-        except IOError:
-            print('fail to load {} using accimage, instead using PIL'.format(path))
-            return my_pil_loader(path)
-    else:
-        return my_pil_loader(path)
 
 
 def train(epoch, trainLoader):
@@ -155,34 +136,38 @@ if __name__ == '__main__':
 
     best_acc = 0
 
-    torch.manual_seed(1)  # Set pseudo-random generator seeds to make multiple runs comparable
-    if haveCuda:
-        torch.cuda.manual_seed(1)
+    trainMode = True
 
-    net = ConvNet(4)
-    if haveCuda:
-        net = net.cuda()
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=1e-4)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, numEpoch, eta_min=1e-2)
+    if trainMode:
+        torch.manual_seed(1)  # Set pseudo-random generator seeds to make multiple runs comparable
+        if haveCuda:
+            torch.cuda.manual_seed(1)
 
-    for epoch in range(numEpoch):
+        net = ConvNet(4)
+        if haveCuda:
+            net = net.cuda()
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=1e-4)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, numEpoch, eta_min=1e-2)
 
-        loss, acc = train(epoch, train_loader)
-        train_accs.append(acc)
-        train_losses.append(loss)
+        for epoch in range(numEpoch):
 
-        loss, acc = val(epoch, test_loader)
-        val_accs.append(acc)
-        val_losses.append(loss)
+            loss, acc = train(epoch, train_loader)
+            train_accs.append(acc)
+            train_losses.append(loss)
 
-        scheduler.step()
+            loss, acc = val(epoch, test_loader)
+            val_accs.append(acc)
+            val_losses.append(loss)
 
-        if acc > best_acc:
-            print("Best Model, Saving")
-            best_acc = acc
-            torch.save(net, model_dir)
+            scheduler.step()
 
-    # Results
-    plotResults(numEpoch, train_accs, train_losses, val_accs, val_losses)
-    testModel()
+            if acc > best_acc:
+                print("Best Model, Saving")
+                best_acc = acc
+                torch.save(net, model_dir)
+
+        # Results
+        plotResults(numEpoch, train_accs, train_losses, val_accs, val_losses)
+
+    testModel(targets, train_loader, batch_size, model_dir)
