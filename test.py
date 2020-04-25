@@ -1,9 +1,6 @@
 import torch
 import matplotlib.pyplot as plt
 
-from torchvision import datasets, get_image_backend
-from PIL import Image
-
 
 def testModel(targets, dataset, batch_size, model_dir):
     inputs, labels = next(iter(dataset))

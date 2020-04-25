@@ -3,8 +3,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
-from PIL import Image
-from torchvision import transforms, get_image_backend
+from torchvision import transforms
 from IPython.display import HTML
 
 
@@ -22,6 +21,8 @@ def get_args():
                         help='path of the test set')
     parser.add_argument('--model-dir', type=str, default='./model/pyVision.pth',
                         help='path of the model')
+    parser.add_argument('--trainMode', action='store_true', default=True,
+                        help='Train the model - flag')
     parser.add_argument('--numEpoch', type=int, default=20, metavar='NUM_EPOCH',
                         help='number of epochs')
     parser.add_argument('--bSize', type=int, default=64, metavar='BATCH_SIZE',
@@ -45,25 +46,6 @@ def progress(value, max=100):
             {value}
         </progress>
     """.format(value=value, max=max))
-
-
-def traffic_loader(path):
-    def my_pil_loader(path):
-        try:
-            with open(path, 'rb') as f:
-                img = Image.open(f)
-                return img.convert('RGB')
-        except:
-            print('fail to load {} using PIL'.format(img))
-
-    if get_image_backend() == 'accimage':
-        try:
-            return accimage_loader(path)
-        except IOError:
-            print('fail to load {} using accimage, instead using PIL'.format(path))
-            return my_pil_loader(path)
-    else:
-        return my_pil_loader(path)
 
 
 def plotResults(num_epoch, train_accs, train_losses, val_accs, val_losses):

@@ -3,10 +3,10 @@ import torch.nn as nn
 import sys
 
 from torch import optim
-from torchvision import datasets, get_image_backend
+from torchvision import datasets
 from IPython.display import display
 
-from utils import get_args, progress, traffic_loader, plotResults, transformData
+from utils import get_args, progress, plotResults, transformData
 from test import testModel
 from model import ConvNet
 
@@ -14,11 +14,12 @@ haveCuda = torch.cuda.is_available()
 
 args = get_args()
 numEpoch = args.numEpoch
-batch_size = args.bSize  # train set: 3251, test set: 163 -> useful batch sizes: 4 or 64 -> 64
+batch_size = args.bSize  # train set: 104027, test set: 10418 -> useful batch sizes: 32 or 64
 num_workers = args.num_workers
 train_dir = args.train_dir
 test_dir = args.test_dir
 model_dir = args.model_dir
+trainMode = args.trainMode
 
 targets = ['Bump', 'Bumpy road', 'Bus stop', 'Children', 'Crossing (blue)', 'Crossing (red)', 'Cyclists',
            'Danger (other)', 'Dangerous left turn', 'Dangerous right turn', 'Give way', 'Go ahead', 'Go ahead or left',
@@ -108,16 +109,8 @@ if __name__ == '__main__':
 
     transform, transform_val = transformData()
 
-    train_dataset = datasets.DatasetFolder(train_dir,
-                                           traffic_loader,
-                                           ('.jpg'),
-                                           transform
-                                           )
-    test_dataset = datasets.DatasetFolder(test_dir,
-                                          traffic_loader,
-                                          ('.jpg'),
-                                          transform_val
-                                          )
+    train_dataset = datasets.ImageFolder(train_dir, transform)
+    test_dataset = datasets.ImageFolder(test_dir, transform_val)
 
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                shuffle=True,
@@ -135,8 +128,6 @@ if __name__ == '__main__':
     val_losses = []
 
     best_acc = 0
-
-    trainMode = True
 
     if trainMode:
         torch.manual_seed(1)  # Set pseudo-random generator seeds to make multiple runs comparable
