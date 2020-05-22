@@ -4,9 +4,8 @@ import sys
 
 from torch import optim
 from torchvision import datasets
-from IPython.display import display
 
-from utils import get_args, progress, plotResults, transformData
+from utils import get_args, plotResults, transformData
 from test import testModel
 from model import ConvNet
 
@@ -41,8 +40,6 @@ def train(epoch, trainLoader):
 
     net.train()
 
-    bar = display(progress(0, len(trainLoader)), display_id=True)  # Create progress bar
-
     for i, data in enumerate(trainLoader, 0):
 
         inputs, labels = data
@@ -62,8 +59,6 @@ def train(epoch, trainLoader):
             correct += predicted.eq(labels).sum().item()  # Count how many of the predictions equal the labels
             total += labels.shape[0]  # Accumulate number of total images seen
 
-        bar.update(progress(i + 1, len(trainLoader)))
-
     tr_loss = running_loss / i
     tr_corr = correct / total * 100
     print("Train epoch %d loss: %.3f correct: %.2f" % (epoch + 1, running_loss / i, tr_corr))
@@ -77,8 +72,6 @@ def val(epoch, testLoader):
     total = 0
 
     net.eval()
-
-    bar = display(progress(0, len(testLoader)), display_id=True)
 
     for i, data in enumerate(testLoader, 0):
 
@@ -95,8 +88,6 @@ def val(epoch, testLoader):
             _, predicted = torch.max(outputs, 1)
             correct += predicted.eq(labels).sum().item()
             total += labels.shape[0]
-
-        bar.update(progress(i + 1, len(testLoader)))
 
     val_loss = running_loss / i
     val_corr = correct / total * 100
